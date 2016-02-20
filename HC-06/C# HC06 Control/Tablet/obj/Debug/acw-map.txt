@@ -1,0 +1,4 @@
+Tablet.MainActivity, Tablet;md57d6cc065a89a6b827d55960ed1e9a243.MainActivity
+Tablet.MainActivity, Tablet, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null;md57d6cc065a89a6b827d55960ed1e9a243.MainActivity
+Tablet.MainActivity;md57d6cc065a89a6b827d55960ed1e9a243.MainActivity
+tablet.MainActivity;md57d6cc065a89a6b827d55960ed1e9a243.MainActivity

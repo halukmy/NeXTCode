@@ -1,0 +1,8 @@
+/Users/haluk/Desktop/Mono-master/Tablet/Tablet/obj/Debug/assemblies/Tablet.dll
+/Users/haluk/Desktop/Mono-master/Tablet/Tablet/obj/Debug/assemblies/System.dll
+/Users/haluk/Desktop/Mono-master/Tablet/Tablet/obj/Debug/assemblies/System.Xml.dll
+/Users/haluk/Desktop/Mono-master/Tablet/Tablet/obj/Debug/assemblies/Mono.Android.dll
+/Users/haluk/Desktop/Mono-master/Tablet/Tablet/obj/Debug/assemblies/System.Core.dll
+/Users/haluk/Desktop/Mono-master/Tablet/Tablet/obj/Debug/assemblies/mscorlib.dll
+/Users/haluk/Desktop/Mono-master/Tablet/Tablet/obj/Debug/assemblies/System.Runtime.Serialization.dll
+/Users/haluk/Desktop/Mono-master/Tablet/Tablet/obj/Debug/assemblies/System.ServiceModel.Internals.dll
