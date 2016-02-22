@@ -173,6 +173,16 @@ void setup() {
 }
 
 
+#include "DHT.h"
+
+#define DHTPIN 4     // what digital pin we're connected to
+
+#define DHTTYPE DHT11   // DHT 11
+
+DHT dht(DHTPIN, DHTTYPE);
+
+  dht.begin();
+
 void loop() {
 
     
@@ -186,22 +196,32 @@ void loop() {
   client.loop();
 
   long now = millis();
-  if (now - lastMsg > 2000) {
+  if (now - lastMsg > 5000) {
     lastMsg = now;
     ++value;
 
 
-  // Serial.println((float)DHT12.humidity, 2);
 
-  float bd = dht.readTemperature(true);     // Read temperature as Fahrenheit
 
-    temp_f =  (bd-32) * 5/9;  // (5/9) * (bd-32);
 
+  int chk = DHT.read11(DHT11_PIN);
+  lcd.setCursor(0,0); 
+  lcd.print("Temp = ");
+  lcd.print(DHT.temperature);
+  lcd.setCursor(0,1);
+  lcd.print("Humidity = ");
+  lcd.print(DHT.humidity);
+  delay(1000);
+
+
+
+ 
 
     
     snprintf (msg, 75, "Derece :  #%ld", temp_f);// (float)DHT12.humidity, 2);
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish("outTopic", msg);
+
   }
 }

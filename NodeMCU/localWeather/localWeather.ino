@@ -84,18 +84,6 @@ void setup(void)
   }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     webString="Temperature: "+String((int)temp_f)+" C";   // Arduino has a hard time with float to string
     server.send(200, "text/plain", webString);            // send to someones browser when asked
   });
