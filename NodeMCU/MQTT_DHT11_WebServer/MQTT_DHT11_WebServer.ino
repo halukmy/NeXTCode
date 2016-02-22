@@ -13,9 +13,6 @@
 
 // ESP8266 Server
 #include <ESP8266WebServer.h>
-  //ESP8266 Web Server Stage
-  ESP8266WebServer server(80);
-
 
 unsigned long previousMillis = 0;        // will store last temp was read
 const long interval = 2000;              // interval at which to read sensor
@@ -102,7 +99,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
   }
 
 
-
+  //ESP8266 Web Server Stage
+  ESP8266WebServer server(80);
   
 void handle_root() {
   server.send(200, "text/plain", "Hello from the weather esp8266, read from /temp or /humidity");
@@ -137,13 +135,12 @@ void setup() {
     webString="Temperature: "+ String((int)t)+" C"; // Arduino has a hard time with float to string
     server.send(200, "text/plain", webString);            // send to someones browser when asked
   });
-  server.begin();
-  Serial.println("HTTP server started");
+
 }
 
 void loop() {
 
-   server.handleClient();
+   
   
   delay(2000);
   float h = dht.readHumidity();
@@ -174,7 +171,7 @@ if (isnan(h) || isnan(t) || isnan(f)) {
   Serial.println(" *F");
 
 
- 
+ server.handleClient();
 
   //MQTT STAGE
 
@@ -187,7 +184,7 @@ if (isnan(h) || isnan(t) || isnan(f)) {
   if (now - lastMsg > 2000) {
     lastMsg = now;
     ++value;
-    snprintf (msg, 75, "Hava Durumu #%ld", h);// value  );
+    snprintf (msg, 75, "hello world #%ld", t);// value  );
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish("outTopic", msg);

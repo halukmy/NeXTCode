@@ -1,4 +1,3 @@
-
 ///WeatherStage
 #include "DHT.h"
 #define DHTPIN 4 
@@ -9,8 +8,17 @@
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
-#include <ESP8266WebServer.h>
 
+
+// ESP8266 Server
+#include <ESP8266WebServer.h>
+  //ESP8266 Web Server Stage
+  ESP8266WebServer server(80);
+
+
+unsigned long previousMillis = 0;        // will store last temp was read
+const long interval = 2000;              // interval at which to read sensor
+String webString="";
 
 const char* ssid = "sungerbob";
 const char* password = "halukbinreyhan";
@@ -19,6 +27,7 @@ const char* mqtt_server = "192.168.0.12";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
 long lastMsg = 0;
 char msg[50];
 int value = 0;
@@ -42,6 +51,8 @@ void setup_wifi() {
   Serial.println("WiFi connected");
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+
+  
 }
 
 //MQTT Connect
@@ -91,6 +102,13 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 
 
+  
+void handle_root() {
+  server.send(200, "text/plain", "Hello from the weather esp8266, read from /temp or /humidity");
+  delay(100);
+}
+
+
 DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
@@ -106,11 +124,25 @@ void setup() {
  client.setServer(mqtt_server, 1883);
    client.setCallback(callback);
   
+//ESP8266 Server Stage
+  server.on("/", handle_root);
+  server.on("/temp", [](){  // if you add this subdirectory to your webserver call, you get text below :)
+  unsigned long currentMillis = millis();
+   if(currentMillis - previousMillis >= interval) {
+       previousMillis = currentMillis;   
 
-
+  }
+   float t = dht.readTemperature();
+    webString="Temperature: "+ String((int)t)+" C"; // Arduino has a hard time with float to string
+    server.send(200, "text/plain", webString);            // send to someones browser when asked
+  });
+  server.begin();
+  Serial.println("HTTP server started");
 }
 
 void loop() {
+
+   server.handleClient();
   
   delay(2000);
   float h = dht.readHumidity();
@@ -141,6 +173,8 @@ if (isnan(h) || isnan(t) || isnan(f)) {
   Serial.println(" *F");
 
 
+ value =hic;
+
   //MQTT STAGE
 
    if (!client.connected()) {
@@ -151,8 +185,8 @@ if (isnan(h) || isnan(t) || isnan(f)) {
   long now = millis();
   if (now - lastMsg > 2000) {
     lastMsg = now;
-    ++value;
-    snprintf (msg, 75, "hello world #%ld", t);// value  );
+    //++value;
+    snprintf (msg, 75, "Hava Durumu #%ld", value);// value  );
     Serial.print("Publish message: ");
     Serial.println(msg);
     client.publish("outTopic", msg);
