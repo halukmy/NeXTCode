@@ -3,9 +3,19 @@
 #include "DHT.h"
 #define DHTPIN 4 
 #define DHTTYPE DHT11  
+#include <Twitter.h>
+
+#include <SoftwareSerial.h>
+
+//Tweet Stage
+#define TOKEN  "12789112-myKkNY6JQtzRtwUCRWGExcY3IxNBPkeUscl0ASEF6"
+static uint32_t timer;
+const char website[] PROGMEM = "arduino-tweet.appspot.com";
+static byte session;
+ 
 
 
-///MQTT Stage & Web Stagec
+///MQTT Stage & Web Stage
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -21,6 +31,22 @@ String webString="";
 const char* ssid = "sungerbob";
 const char* password = "halukbinreyhan";
 const char* mqtt_server = "192.168.0.12";
+
+// MQTT Coming Signal
+
+char* topic = "device/control";
+char* topicPublish = "device/sensor";
+//char* server = "192.168.0.12"; //ip address of http://test.mosquitto.org/
+//----------
+
+// ThingSpeak Settings
+char thingSpeakAddress[] = "api.thingspeak.com";
+String writeAPIKey = "7L7RFHV5SYCVNJNP";
+const int updateThingSpeakInterval = 16 * 1000; // Time interval in milliseconds to update ThingSpeak (number of seconds * 1000 = interval)
+
+// GET /update?key=[THINGSPEAK_KEY]&field1=[data 1]&field2=[data 2]...;
+String GET = "GET /update?key=[ThingSpeak_(Write)7L7RFHV5SYCVNJNP]";
+
 
 
 WiFiClient espClient;
@@ -63,7 +89,7 @@ void reconnect() {
     if (client.connect("ESP8266Client")) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
+      client.publish("Homext", "I'm Connected");
       // ... and resubscribe
       client.subscribe("inTopic");
     } else {
@@ -77,7 +103,7 @@ void reconnect() {
 }
 
 //MQTT SEND & RECEIVE
-
+char message_buff[100];
 void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print("Message arrived [");
     Serial.print(topic);
@@ -96,6 +122,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     } else {
       digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
     }
+
+
+
+    
   }
 
 
@@ -180,20 +210,91 @@ value =hic;
     reconnect();
   }
   client.loop();
+String apiKey = "7L7RFHV5SYCVNJNP";
+char* serverID = "api.thingspeak.com";
+
+
+
+
+
+
+
+
 
   long now = millis();
   if (now - lastMsg > 10000) {
     lastMsg = now;
-    ++value;
-    snprintf (msg, 75, "Sıcaklık Durumu #%ld",  value  );
+    
+
+
+
+//retain message
+char* message = msg;
+int length = strlen(message);
+boolean retained = true;
+
+
+    
+    snprintf (msg, 75, "Isı #%ld",  value  );
     Serial.print("Publish message: ");
     Serial.println(msg);
-    int length = strlen(msg);
 
-    boolean retained = true;
+    client.publish("Homext",(byte*)message,length,retained);
 
-    client.publish("outTopic",(byte*)msg,length,retained);
+  //  client.publish("Homext", msg);
+
   }
+
+ 
+
   
-    
 }
+
+
+static void TweetAt () {
+  Serial.println("Tweet hazirlaniyor");
+  float sicaklik = analogRead(A0); 
+  /* A0daki gerilim ölçüldü */
+  sicaklik = sicaklik * 0.48828125;
+  /* Ölçülen gerilim sicaklığa çevrildi */
+
+  byte sd = stash.create();
+  stash.print("token=");
+  stash.print(TOKEN);
+  stash.print("&status=");
+  stash.print("Odamin sicakligi su anda ");
+  stash.print(sicaklik);
+  stash.println(" derecedir.");
+  
+  Serial.println("Tweet hazirlandi");
+  
+  stash.save();
+  int stash_size = stash.size();  
+  Stash::prepare(PSTR("POST http://$F/update HTTP/1.0" "\r\n"
+    "Host: $F" "\r\n"
+    "Content-Length: $D" "\r\n"
+    "\r\n"
+    "$H"),
+  website, website, stash_size, sd);
+  session = ether.tcpSend();
+  Serial.println("Tweet yollandi");
+}
+ 
+void setup () {
+  Serial.begin(57600);
+  if (ether.begin(sizeof Ethernet::buffer, mymac) == 0) 
+    Serial.println(F("Ethernet baglanti hatasi"));
+  if (!ether.dhcpSetup())
+    Serial.println(F("DHCP hatasi"));
+ 
+  ether.printIp("IP:  ", ether.myip);
+  ether.printIp("GW:  ", ether.gwip);  
+  ether.printIp("DNS: ", ether.dnsip);  
+ 
+  if (!ether.dnsLookup(website))
+    Serial.println(F("DNS hatasi"));
+ 
+  ether.printIp("SRV: ", ether.hisip);
+ 
+}
+

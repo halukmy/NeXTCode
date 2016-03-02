@@ -1,3 +1,5 @@
+#include <SPI.h>
+
 
 ///WeatherStage
 #include "DHT.h"
@@ -5,10 +7,11 @@
 #define DHTTYPE DHT11  
 
 
-///MQTT Stage & Web Stagec
+///MQTT Stage & Web Stage
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+
 
 
 // ESP8266 Server
@@ -21,6 +24,22 @@ String webString="";
 const char* ssid = "sungerbob";
 const char* password = "halukbinreyhan";
 const char* mqtt_server = "192.168.0.12";
+
+// MQTT Coming Signal
+
+char* topic = "device/control";
+char* topicPublish = "device/sensor";
+//char* server = "192.168.0.12"; //ip address of http://test.mosquitto.org/
+//----------
+
+// ThingSpeak Settings
+char thingSpeakAddress[] = "api.thingspeak.com";
+String writeAPIKey = "7L7RFHV5SYCVNJNP";
+const int updateThingSpeakInterval = 16 * 1000; // Time interval in milliseconds to update ThingSpeak (number of seconds * 1000 = interval)
+
+// GET /update?key=[THINGSPEAK_KEY]&field1=[data 1]&field2=[data 2]...;
+String GET = "GET /update?key=[ThingSpeak_(Write)7L7RFHV5SYCVNJNP]";
+
 
 
 WiFiClient espClient;
@@ -63,7 +82,7 @@ void reconnect() {
     if (client.connect("ESP8266Client")) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("outTopic", "hello world");
+      client.publish("Homext", "I'm Connected");
       // ... and resubscribe
       client.subscribe("inTopic");
     } else {
@@ -77,7 +96,7 @@ void reconnect() {
 }
 
 //MQTT SEND & RECEIVE
-
+char message_buff[100];
 void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print("Message arrived [");
     Serial.print(topic);
@@ -96,6 +115,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     } else {
       digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
     }
+
+
+
+    
   }
 
 
@@ -111,7 +134,7 @@ void handle_root() {
 DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 //DHT STAGE
   Serial.println("DHT Weather Coming!");
   dht.begin();
@@ -180,20 +203,43 @@ value =hic;
     reconnect();
   }
   client.loop();
+String apiKey = "7L7RFHV5SYCVNJNP";
+char* serverID = "api.thingspeak.com";
+
+
+
+
+
+
+
+
 
   long now = millis();
   if (now - lastMsg > 10000) {
     lastMsg = now;
-    ++value;
-    snprintf (msg, 75, "Sıcaklık Durumu #%ld",  value  );
+    
+
+
+
+//retain message
+char* message = msg;
+int length = strlen(message);
+boolean retained = true;
+
+
+    
+    snprintf (msg, 75, "Isı #%ld",  value  );
     Serial.print("Publish message: ");
     Serial.println(msg);
-    int length = strlen(msg);
 
-    boolean retained = true;
+    client.publish("Homext",(byte*)message,length,retained);
 
-    client.publish("outTopic",(byte*)msg,length,retained);
+  //  client.publish("Homext", msg);
+
   }
+
+ 
+
   
-    
 }
+

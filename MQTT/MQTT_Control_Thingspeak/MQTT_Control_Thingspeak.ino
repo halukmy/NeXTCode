@@ -5,7 +5,7 @@
 #define DHTTYPE DHT11  
 
 
-///MQTT Stage & Web Stagec
+///MQTT Stage & Web Stage
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
@@ -52,6 +52,13 @@ void setup_wifi() {
 
   
 }
+
+
+
+
+
+
+
 
 //MQTT Connect
 
@@ -138,10 +145,15 @@ void setup() {
 
 }
 
+
+
+// replace with your channel's thingspeak API key, 
+String apiKey = "7L7RFHV5SYCVNJNP";
+char* serverID = "api.thingspeak.com";
+ 
+
 void loop() {
 
-   
-  
   delay(2000);
   float h = dht.readHumidity();
   // Read temperature as Celsius (the default)
@@ -152,6 +164,9 @@ if (isnan(h) || isnan(t) || isnan(f)) {
     Serial.println("Failed to read from DHT sensor!");
     return;
 }
+
+value = t;
+
 // Compute heat index in Fahrenheit (the default)
   float hif = dht.computeHeatIndex(f, h);
   // Compute heat index in Celsius (isFahreheit = false)
@@ -181,19 +196,49 @@ value =hic;
   }
   client.loop();
 
-  long now = millis();
-  if (now - lastMsg > 10000) {
-    lastMsg = now;
-    ++value;
-    snprintf (msg, 75, "Sıcaklık Durumu #%ld",  value  );
-    Serial.print("Publish message: ");
-    Serial.println(msg);
-    int length = strlen(msg);
-
-    boolean retained = true;
-
-    client.publish("outTopic",(byte*)msg,length,retained);
-  }
   
+  
+
+
+   
+
+ if (espClient.connect(serverID,80)) {  //   "184.106.153.149" or api.thingspeak.com
+    String postStr = apiKey;
+           postStr +="&field1=";
+           postStr += String(value);
+           postStr +="&field2=";
+           postStr += String(h);
+           postStr += "\r\n\r\n";
+ 
+     espClient.print("POST /update HTTP/1.1\n"); 
+     espClient.print("Host: api.thingspeak.com\n"); 
+     espClient.print("Connection: close\n"); 
+     espClient.print("X-THINGSPEAKAPIKEY: "+apiKey+"\n"); 
+     espClient.print("Content-Type: application/x-www-form-urlencoded\n"); 
+     espClient.print("Content-Length: "); 
+     espClient.print(postStr.length()); 
+     espClient.print("\n\n"); 
+     espClient.print(postStr);
+
+     
+ }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
 }
