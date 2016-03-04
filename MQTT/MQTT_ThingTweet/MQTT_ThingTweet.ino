@@ -29,7 +29,7 @@ float h, t;
 
 WiFiClient wifiClient;
 MQTTClient client;
-
+WiFiClient espClient;
 String macToStr(const uint8_t* mac)
 {
   String result;
@@ -57,6 +57,9 @@ void setup() {
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
 
+updateTwitterStatus("My thing is social @thingspeak AREYSoft Haydi Bismillah");
+
+Serial.println("tweet atmam gerekirdi");
   // Generate client name based on MAC address and last 8 bits of microsecond counter
   uint8_t mac[6];
   WiFi.macAddress(mac);
@@ -84,15 +87,67 @@ void setup() {
 
   prevTime = 0;
 
-  
+    
+
 }
+
+
 
 
 String apiKey = "7L7RFHV5SYCVNJNP";
 char* serverID = "api.thingspeak.com";
- 
+String thingtweetAPIKey = "L2POQ3XQCRL31BOL";
 
 
+void updateTwitterStatus(String tsData)
+{
+  char thingSpeakAddress[] = "api.thingspeak.com";
+long lastConnectionTime = 0; 
+int failedCounter = 0;
+
+  if (espClient.connect(thingSpeakAddress, 80))
+  { 
+    // Create HTTP POST Data
+    tsData = "api_key="+thingtweetAPIKey+"&status="+tsData;
+            
+    espClient.print("POST /apps/thingtweet/1/statuses/update HTTP/1.1\n");
+    espClient.print("Host: api.thingspeak.com\n");
+    espClient.print("Connection: close\n");
+    espClient.print("Content-Type: application/x-www-form-urlencoded\n");
+    espClient.print("Content-Length: ");
+    espClient.print(tsData.length());
+    espClient.print("\n\n");
+
+    espClient.print(tsData);
+    
+    lastConnectionTime = millis();
+    
+    if (client.connected())
+    {
+      Serial.println("Connecting to ThingSpeak...");
+      Serial.println();
+      
+      failedCounter = 0;
+    }
+    else
+    {
+      failedCounter++;
+  
+      Serial.println("Connection to ThingSpeak failed ("+String(failedCounter, DEC)+")");   
+      Serial.println();
+    }
+    
+  }
+  else
+  {
+    failedCounter++;
+    
+    Serial.println("Connection to ThingSpeak Failed ("+String(failedCounter, DEC)+")");   
+    Serial.println();
+    
+    lastConnectionTime = millis(); 
+  }
+}
 
 void loop() {
   static int counter = 0;
@@ -140,7 +195,7 @@ void loop() {
     ESP.restart();
   }
 
-WiFiClient espClient;
+
 
   char* serverID = "api.thingspeak.com";
  if (espClient.connect(serverID,80)) {  //   "184.106.153.149" or api.thingspeak.com
